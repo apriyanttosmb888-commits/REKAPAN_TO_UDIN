@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pasaran Converter</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+:root{--ng:#00ff88;--nb:#00cfff;--np:#ff2d78;--ny:#ffe600;--no:#ff8c00;--card:rgba(0,8,24,.91);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:auto;background:#000;}
+
+/* GIF BG */
+#bgLayer{position:fixed;inset:0;z-index:0;overflow:hidden;}
+#bgLayer img{width:100%;height:100%;object-fit:cover;filter:brightness(.28) saturate(1.7);}
+#bgLayer::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 15% 60%,rgba(255,140,0,.22) 0%,transparent 55%),
+  radial-gradient(ellipse at 85% 25%,rgba(0,207,255,.18) 0%,transparent 55%),
+  radial-gradient(ellipse at 50% 90%,rgba(255,45,120,.14) 0%,transparent 55%);
+  animation:bgp 7s ease-in-out infinite alternate;}
+@keyframes bgp{from{opacity:.7}to{opacity:1}}
+body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.05) 2px,rgba(0,0,0,.05) 4px);}
+
+.wrap{position:relative;z-index:1;max-width:1800px;margin:0 auto;padding:18px 14px 50px;}
+
+/* HEADER */
+.hdr{text-align:center;padding:22px 0 18px;}
+.hdr h1{font-family:'Orbitron',sans-serif;font-size:clamp(1.1rem,2.8vw,1.9rem);font-weight:900;
+  letter-spacing:5px;color:var(--ng);
+  text-shadow:0 0 8px var(--ng),0 0 28px var(--ng),0 0 55px rgba(0,255,136,.35);
+  animation:flk 5s infinite alternate;}
+.hdr p{color:var(--nb);font-size:.75rem;letter-spacing:3px;margin-top:7px;text-shadow:0 0 8px var(--nb);}
+@keyframes flk{0%,93%,100%{opacity:1}94%{opacity:.6}95%{opacity:1}97%{opacity:.5}98%{opacity:1}}
+
+/* INFO */
+.info{background:rgba(0,18,40,.8);border:1px solid rgba(0,207,255,.25);border-radius:7px;
+  padding:11px 15px;margin-bottom:13px;font-size:.7rem;color:rgba(0,207,255,.75);letter-spacing:.5px;line-height:1.75;}
+.info strong{color:var(--ny);}
+
+/* PASTE BOX */
+.pbox{background:var(--card);border:1px solid var(--ng);border-radius:8px;padding:15px;margin-bottom:16px;
+  box-shadow:0 0 18px rgba(0,255,136,.18),inset 0 0 10px rgba(0,255,136,.03);}
+.pbox label{display:block;color:var(--ny);font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:3px;margin-bottom:9px;text-shadow:0 0 8px var(--ny);}
+textarea{width:100%;min-height:120px;background:rgba(0,0,0,.72);border:1px solid rgba(0,207,255,.35);border-radius:6px;
+  color:#aaffe0;font-family:'Share Tech Mono',monospace;font-size:.8rem;padding:11px;resize:vertical;
+  outline:none;line-height:1.65;transition:border-color .3s,box-shadow .3s;}
+textarea:focus{border-color:var(--ng);box-shadow:0 0 12px rgba(0,255,136,.28);}
+textarea::placeholder{color:rgba(0,207,255,.3);}
+
+/* BUTTONS */
+.brow{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px;}
+.btn{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:1.5px;
+  padding:8px 16px;border:none;border-radius:5px;cursor:pointer;font-weight:700;transition:all .2s;}
+.btn:hover{transform:translateY(-1px);}
+.bgo{background:linear-gradient(135deg,#003322,#005533);color:var(--ng);border:1px solid var(--ng);box-shadow:0 0 12px rgba(0,255,136,.3);}
+.bgo:hover{box-shadow:0 0 24px rgba(0,255,136,.6);}
+.bca{background:linear-gradient(135deg,#001133,#002255);color:var(--nb);border:1px solid var(--nb);box-shadow:0 0 10px rgba(0,207,255,.25);}
+.bca:hover{box-shadow:0 0 22px rgba(0,207,255,.6);}
+.bcr{background:linear-gradient(135deg,#220000,#440011);color:var(--np);border:1px solid var(--np);box-shadow:0 0 10px rgba(255,45,120,.25);}
+.bcr:hover{box-shadow:0 0 20px rgba(255,45,120,.6);}
+.bre{background:linear-gradient(135deg,#1a1000,#2a1a00);color:var(--no);border:1px solid var(--no);box-shadow:0 0 10px rgba(255,140,0,.25);}
+.bre:hover{box-shadow:0 0 20px rgba(255,140,0,.6);}
+.bpu{background:linear-gradient(135deg,#1a0030,#2a0050);color:#cc88ff;border:1px solid #cc88ff;box-shadow:0 0 10px rgba(200,136,255,.25);}
+.bpu:hover{box-shadow:0 0 20px rgba(200,136,255,.6);}
+.status{font-size:.7rem;color:var(--nb);text-shadow:0 0 6px var(--nb);margin-top:9px;min-height:17px;letter-spacing:1px;}
+
+/* ═══ MAIN TABLE (VERTIKAL) ═══ */
+.twrap{background:var(--card);border:1px solid rgba(0,207,255,.35);border-radius:8px;
+  overflow:auto;box-shadow:0 0 22px rgba(0,207,255,.12);margin-bottom:20px;}
+.sbar{display:none;gap:18px;flex-wrap:wrap;padding:10px 15px;
+  background:rgba(0,0,0,.55);border-bottom:1px solid rgba(0,255,136,.13);font-size:.68rem;letter-spacing:1px;}
+.si{display:flex;gap:7px;align-items:center;}
+.sl{color:rgba(140,140,140,.7);}
+.sv{font-family:'Orbitron',sans-serif;font-size:.62rem;}
+.sv.g{color:var(--ng);text-shadow:0 0 6px var(--ng);}
+.sv.r{color:var(--np);text-shadow:0 0 6px var(--np);}
+.sv.y{color:var(--ny);text-shadow:0 0 6px var(--ny);}
+
+/* ═══ RECAP TABLE (HORIZONTAL) ═══ */
+.rwrap{background:rgba(0,5,18,.93);border:1px solid rgba(255,230,0,.4);border-radius:8px;
+  overflow:auto;box-shadow:0 0 24px rgba(255,230,0,.12);}
+.rheader{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  padding:12px 16px;border-bottom:1px solid rgba(255,230,0,.2);}
+.rtitle{font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:3px;color:var(--ny);text-shadow:0 0 10px var(--ny);}
+.rbtns{display:flex;gap:7px;flex-wrap:wrap;}
+
+/* SHARED TABLE STYLES */
+table{width:100%;border-collapse:collapse;}
+thead tr{background:linear-gradient(90deg,rgba(0,25,8,.97),rgba(0,8,25,.97));}
+th{font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:1.2px;
+  padding:9px 7px;text-align:center;border-right:1px solid rgba(0,255,136,.12);white-space:nowrap;}
+/* Main table header classes */
+th.hno{color:var(--ny);text-shadow:0 0 7px var(--ny);width:30px;}
+th.hnm{color:var(--ng);text-shadow:0 0 7px var(--ng);text-align:left;min-width:140px;}
+th.hm {color:var(--nb);text-shadow:0 0 7px var(--nb);min-width:115px;}
+th.hwb{color:var(--no);text-shadow:0 0 7px var(--no);min-width:120px;}
+th.htp{color:#cc88ff;text-shadow:0 0 7px #cc88ff;min-width:120px;}
+/* Recap table header classes */
+th.rh-ket{color:var(--ny);text-shadow:0 0 7px var(--ny);text-align:left;min-width:110px;padding-left:13px;}
+th.rh-pas{color:var(--ng);text-shadow:0 0 7px var(--ng);min-width:100px;}
+th.rh-tot{color:#ff8cff;text-shadow:0 0 7px #ff8cff;min-width:110px;}
+
+tbody tr{border-bottom:1px solid rgba(0,255,136,.07);transition:background .18s;}
+tbody tr:hover{background:rgba(0,255,136,.055);}
+tbody tr:nth-child(even){background:rgba(0,8,18,.55);}
+td{padding:8px 7px;font-size:.76rem;text-align:center;
+  border-right:1px solid rgba(0,255,136,.07);white-space:nowrap;font-family:'Share Tech Mono',monospace;}
+
+/* Main table td classes */
+.cno{color:rgba(255,230,0,.55);font-size:.67rem;}
+.cnm{color:#ddfff0;text-align:left;font-weight:600;padding-left:13px;letter-spacing:.4px;}
+.cm {color:var(--nb);text-shadow:0 0 5px rgba(0,207,255,.45);}
+.cwb{font-weight:700;}
+.pos{color:#00ffaa;text-shadow:0 0 8px rgba(0,255,170,.55);}
+.neg{color:#ff3366;text-shadow:0 0 8px rgba(255,51,102,.55);}
+.zer{color:rgba(140,140,140,.5);}
+.ctp{color:#cc88ff;text-shadow:0 0 6px rgba(200,136,255,.45);font-weight:700;}
+.emp{color:rgba(70,70,70,.5);font-size:.68rem;}
+.act{width:30px;}
+.rbtn2{background:none;border:1px solid rgba(0,207,255,.28);color:rgba(0,207,255,.55);
+  border-radius:4px;padding:2px 6px;font-size:.58rem;cursor:pointer;transition:all .2s;font-family:'Share Tech Mono',monospace;}
+.rbtn2:hover{border-color:var(--nb);color:var(--nb);box-shadow:0 0 8px rgba(0,207,255,.45);}
+tr.totrow{background:linear-gradient(90deg,rgba(0,30,10,.95),rgba(0,10,30,.95))!important;border-top:2px solid rgba(0,255,136,.3);}
+tr.totrow td{font-weight:700;font-size:.78rem;}
+tr.totrow .cnm{color:var(--ny);text-shadow:0 0 8px var(--ny);}
+tr.totrow .cm{color:var(--ng);text-shadow:0 0 8px var(--ng);}
+
+/* Recap horizontal td classes */
+.rl-ket{color:var(--ny);text-align:left;padding-left:13px;font-weight:700;font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:1.5px;}
+.rv-m  {color:var(--nb);text-shadow:0 0 5px rgba(0,207,255,.45);}
+.rv-pos{color:#00ffaa;text-shadow:0 0 8px rgba(0,255,170,.55);font-weight:700;}
+.rv-neg{color:#ff3366;text-shadow:0 0 8px rgba(255,51,102,.55);font-weight:700;}
+.rv-zer{color:rgba(140,140,140,.5);}
+.rv-tp {color:#cc88ff;text-shadow:0 0 6px rgba(200,136,255,.45);font-weight:700;}
+.rv-emp{color:rgba(70,70,70,.5);}
+.rv-tot{color:#ff8cff;text-shadow:0 0 8px rgba(255,140,255,.55);font-weight:700;border-left:1px solid rgba(255,140,255,.3);}
+tr.rtotrow{background:linear-gradient(90deg,rgba(30,0,30,.95),rgba(0,10,30,.95))!important;border-top:2px solid rgba(255,140,255,.3);}
+tr.rtotrow td{font-weight:700;}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:rgba(0,255,136,.2);font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:3px;}
+.empty .ico{font-size:2.2rem;margin-bottom:10px;opacity:.25;}
+
+/* TOAST */
+.toast{position:fixed;top:18px;right:18px;z-index:9999;
+  background:rgba(0,255,136,.1);border:1px solid var(--ng);color:var(--ng);
+  font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:2px;
+  padding:10px 18px;border-radius:6px;box-shadow:0 0 22px rgba(0,255,136,.4);
+  transform:translateX(130%);transition:transform .3s;}
+.toast.on{transform:translateX(0);}
+</style>
+</head>
+<body>
+
+<div id="bgLayer">
+  <img id="gifImg" src="https://media2.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif" alt="bg"
+    onerror="tryNextGif()">
+</div>
+<div class="toast" id="toast">✓ COPIED!</div>
+
+<div class="wrap">
+  <div class="hdr">
+    <h1>⚡ PASARAN DATA CONVERTER ⚡</h1>
+    <p>VERTICAL → HORIZONTAL &nbsp;|&nbsp; NEON + REKAPAN EDITION</p>
+  </div>
+
+  <div class="info">
+    <strong>📋 CARA PAKAI:</strong> Copy data vertikal dari tabel → paste di bawah (auto-proses saat paste).<br>
+    <strong>FORMAT DITERIMA:</strong> Tab-separated dari copy tabel web/spreadsheet, atau satu kolom per baris.<br>
+    <strong>NOMINAL:</strong> Titik ribuan diganti koma. <strong>COPY:</strong> Hanya mengambil angkanya saja, siap paste ke Sheet.
+  </div>
+
+  <div class="pbox">
+    <label>📥 PASTE DATA VERTIKAL DI SINI</label>
+    <textarea id="rawInput" placeholder="Paste data vertikal dari tabel di sini...
+Contoh (tab-separated dari copy tabel):
+57.  BANGKOK 0130   1,856,110   -559,092.47
+59.  BRUNEI 02   4,405,094   -2,791,107.98
+
+Atau satu kolom:
+BANGKOK 0130
+1856110
+-559092.47"></textarea>
+    <div class="brow">
+      <button class="btn bgo" onclick="processData()">⚡ PROSES DATA</button>
+      <button class="btn bca" onclick="copyAll()">📋 COPY SEMUA → SHEET</button>
+      <button class="btn bcr" onclick="clearAll()">✕ CLEAR</button>
+    </div>
+    <div class="status" id="statusBar">— Siap menerima data —</div>
+  </div>
+
+  <!-- MAIN TABLE (VERTIKAL) -->
+  <div class="twrap">
+    <div class="sbar" id="sbar"></div>
+    <table>
+      <thead>
+        <tr>
+          <th class="hno">NO</th>
+          <th class="hnm">PASARAN</th>
+          <th class="hm">MODAL</th>
+          <th class="hwb">WIN / BOK</th>
+          <th class="htp">TO PERHARI</th>
+          <th class="hno">⎘</th>
+        </tr>
+      </thead>
+      <tbody id="mainBody">
+        <tr><td colspan="6"><div class="empty"><div class="ico">🎯</div><div>PASTE DATA DAN KLIK PROSES</div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RECAP TABLE (HORIZONTAL) -->
+  <div class="rwrap" id="recapWrap" style="display:none">
+    <div class="rheader">
+      <span class="rtitle">📊 REKAPAN HORIZONTAL</span>
+      <div class="rbtns">
+        <button class="btn bca" id="recapCopySheet">📋 COPY SEMUA → SHEET</button>
+        <button class="btn bgo" id="recapCopyModal">⬇ COPY NOMINAL MODAL</button>
+        <button class="btn bre" id="recapCopyWB">⬇ COPY NOMINAL WIN/BOK</button>
+        <button class="btn bpu" id="recapCopyTP" style="display:none">⬇ COPY NOMINAL TO/HR</button>
+      </div>
+    </div>
+    <table id="recapTable"></table>
+  </div>
+</div>
+
+<script>
+const PASARAN=[
+  "POIPET12","POIPET15","POIPET19","POIPET22",
+  "BRUNEI 02","BRUNEI 14","BRUNEI 21",
+  "BANGKOK 0130","BANGKOK 0930",
+  "HUAHIN 0100","HUAHIN 1630","HUAHIN 2100",
+  "CHELSEA 11","CHELSEA 15","CHELSEA 19","CHELSEA 21",
+  "TOTOMALI1530","TOTOMALI2030","TOTOMALI2330",
+  "NEVADA","TOTOCAMBODIA","HOKIDRAW"
+];
+
+const GIFS=[
+  "https://media2.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
+  "https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif",
+  "https://media.giphy.com/media/xT9IgG50Lg7rusyOqY/giphy.gif"
+];
+let gifIdx=0;
+function tryNextGif(){
+  gifIdx++;
+  const el=document.getElementById('gifImg');
+  if(gifIdx<GIFS.length){ el.src=GIFS[gifIdx]; }
+  else {
+    const bg=document.getElementById('bgLayer');
+    bg.innerHTML='';
+    bg.style.cssText='position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#001a0a,#00080f,#1a0010);';
+  }
+}
+
+let gData=null;
+
+// ── PARSER ────────────────────────────────────────────────────────────────────
+function parseInput(raw){
+  const res={};
+  PASARAN.forEach(p=>{ res[p]={modal:null,wb:null,tp:null}; });
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  // Pass 1: tab-separated
+  for(const line of lines){
+    const parts=line.split('\t').map(s=>s.trim()).filter(Boolean);
+    for(let i=0;i<parts.length;i++){
+      const cand=parts[i].replace(/^\d+[\.\s]+/,'').toUpperCase().trim();
+      const key=exactM(cand);
+      if(key){
+        const nums=parts.slice(i+1).map(p=>p.replace(/,/g,'').replace(/\s/g,'')).filter(p=>/^-?\d+(\.\d+)?$/.test(p));
+        if(nums.length>=1) res[key].modal=parseFloat(nums[0]);
+        if(nums.length>=2) res[key].wb=parseFloat(nums[1]);
+        if(nums.length>=3) res[key].tp=parseFloat(nums[2]);
+        break;
+      }
+    }
+  }
+  // Pass 2: space-separated
+  for(const line of lines){
+    const clean=line.replace(/^\d+[\.\s]+/,'');
+    const key=fuzzyM(clean);
+    if(key&&res[key].modal===null){
+      const rest=clean.toUpperCase().replace(key,'').trim();
+      const nums=rest.split(/[\s\t]+/).map(p=>p.replace(/,/g,'')).filter(p=>/^-?\d+(\.\d+)?$/.test(p));
+      if(nums.length>=1) res[key].modal=parseFloat(nums[0]);
+      if(nums.length>=2) res[key].wb=parseFloat(nums[1]);
+      if(nums.length>=3) res[key].tp=parseFloat(nums[2]);
+    }
+  }
+  // Pass 3: single-column
+  let i=0;
+  while(i<lines.length){
+    const clean=lines[i].replace(/^\d+[\.\s]+/,'').trim();
+    const key=exactM(clean.toUpperCase());
+    if(key&&res[key].modal===null){
+      let j=i+1,nums=[];
+      while(j<lines.length&&nums.length<3){
+        const n=lines[j].replace(/,/g,'').trim();
+        if(/^-?\d+(\.\d+)?$/.test(n)){nums.push(parseFloat(n));j++;}
+        else break;
+      }
+      if(nums.length){ res[key].modal=nums[0]; if(nums.length>=2) res[key].wb=nums[1]; if(nums.length>=3) res[key].tp=nums[2]; i=j-1; }
+    }
+    i++;
+  }
+  return res;
+}
+function exactM(t){ return PASARAN.find(p=>p===t.trim())||null; }
+function fuzzyM(text){ const t=text.toUpperCase(); return PASARAN.find(p=>t.includes(p))||null; }
+
+// ── FORMAT: gunakan koma sebagai separator ribuan (bukan titik) ──────────────
+// en-US = 1,234,567.89 → kita inginkan 1.234.567,89
+// User minta "titik ganti koma" → artinya: 1,856,110 bukan 1.856.110
+// Kita pakai en-US lalu biarkan apa adanya (koma ribuan, titik desimal)
+// TAPI user minta titik → koma: jadi ribuan pakai titik, desimal pakai koma → id-ID style
+// Simpulan: format id-ID = 1.856.110,47 → user minta titik jadi koma → 1,856,110,47? 
+// Interpretasi paling logis: separator ribuan pakai KOMA (bukan titik), desimal pakai titik → en-US
+// → "titik ganti koma" = yang biasa pakai titik (id-ID) sekarang pakai koma = en-US format
+function fmtK(v){
+  if(v===null||v===undefined) return '0';
+  return v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+function fmtKS(v){
+  if(v===null) return '0';
+  return (v>0?'+':'')+fmtK(v);
+}
+
+// ── RENDER MAIN TABLE ─────────────────────────────────────────────────────────
+function renderMain(data){
+  const tbody=document.getElementById('mainBody');
+  tbody.innerHTML='';
+  let totM=0,totW=0,totT=0,filled=0;
+
+  PASARAN.forEach((p,idx)=>{
+    const d=data[p],has=d.modal!==null;
+    if(has){filled++;totM+=d.modal||0;totW+=d.wb||0;totT+=d.tp||0;}
+    const tr=document.createElement('tr');
+    _td(tr,idx+1,'cno');
+    _td(tr,p,'cnm');
+    _td(tr,has?fmtK(d.modal):'—',has?'cm':'emp');
+    const wc=!has||d.wb===null?'emp':'cwb '+(d.wb>0?'pos':d.wb<0?'neg':'zer');
+    _td(tr,has&&d.wb!==null?fmtKS(d.wb):'—',wc);
+    const tc=!has||d.tp===null?'emp':'ctp';
+    _td(tr,has&&d.tp!==null?fmtK(d.tp):'—',tc);
+    const tdA=document.createElement('td');tdA.className='act';
+    const btn=document.createElement('button');btn.className='rbtn2';btn.textContent='⎘';
+    btn.title='Copy nominal baris ini';
+    btn.onclick=()=>{
+      const m=has?fmtK(d.modal):'0';
+      const w=has&&d.wb!==null?fmtKS(d.wb):'0';
+      const t2=has&&d.tp!==null?fmtK(d.tp):'0';
+      doCopy([m,w,t2].join('\t'),'NOMINAL BARIS DI-COPY!');
+    };
+    tdA.appendChild(btn);tr.appendChild(tdA);
+    tbody.appendChild(tr);
+  });
+
+  // Total row
+  const tr=document.createElement('tr');tr.className='totrow';
+  _td(tr,'','cno');_td(tr,'⬛ TOTAL','cnm');_td(tr,fmtK(totM),'cm');
+  _td(tr,fmtKS(totW),'cwb '+(totW>0?'pos':totW<0?'neg':'zer'));
+  _td(tr,fmtK(totT),'ctp');_td(tr,'','act');
+  tbody.appendChild(tr);
+
+  const sb=document.getElementById('sbar');sb.style.display='flex';
+  sb.innerHTML=`
+    <div class="si"><span class="sl">TERISI:</span><span class="sv y">${filled}/${PASARAN.length}</span></div>
+    <div class="si"><span class="sl">TOTAL MODAL:</span><span class="sv g">${fmtK(totM)}</span></div>
+    <div class="si"><span class="sl">TOTAL W/B:</span><span class="sv ${totW>=0?'g':'r'}">${fmtKS(totW)}</span></div>
+    <div class="si"><span class="sl">TOTAL TO/HR:</span><span class="sv g">${fmtK(totT)}</span></div>`;
+}
+function _td(tr,text,cls){
+  const el=document.createElement('td');el.className=cls;el.textContent=text;tr.appendChild(el);
+}
+
+// ── RENDER RECAP HORIZONTAL ───────────────────────────────────────────────────
+function renderRecap(data){
+  const wrap=document.getElementById('recapWrap');
+  wrap.style.display='block';
+
+  // Hanya pasaran yang terisi
+  const filled=PASARAN.filter(p=>data[p].modal!==null);
+  let totM=0,totW=0,totT=0;
+  filled.forEach(p=>{ totM+=data[p].modal||0; totW+=data[p].wb||0; totT+=data[p].tp||0; });
+  const hasTP=filled.some(p=>data[p].tp!==null);
+
+  const table=document.getElementById('recapTable');
+  table.innerHTML='';
+
+  // THEAD: KETERANGAN | pasaran... | TOTAL
+  const thead=document.createElement('thead');
+  const headTr=document.createElement('tr');
+  _th(headTr,'KETERANGAN','rh-ket');
+  filled.forEach(p=>_th(headTr,p,'rh-pas'));
+  _th(headTr,'TOTAL','rh-tot');
+  thead.appendChild(headTr);table.appendChild(thead);
+
+  // TBODY
+  const tbody=document.createElement('tbody');
+
+  // Baris MODAL
+  const trM=document.createElement('tr');
+  _rtd(trM,'MODAL','rl-ket');
+  filled.forEach(p=>_rtd(trM,fmtK(data[p].modal),'rv-m'));
+  _rtd(trM,fmtK(totM),'rv-tot');
+  tbody.appendChild(trM);
+
+  // Baris WIN/BOK
+  const trW=document.createElement('tr');
+  _rtd(trW,'WIN / BOK','rl-ket');
+  filled.forEach(p=>{
+    const v=data[p].wb;
+    const cls=v===null?'rv-emp':v>0?'rv-pos':v<0?'rv-neg':'rv-zer';
+    _rtd(trW,v!==null?fmtKS(v):'0',cls);
+  });
+  _rtd(trW,fmtKS(totW),totW>0?'rv-tot rv-pos':totW<0?'rv-tot rv-neg':'rv-tot rv-zer');
+  tbody.appendChild(trW);
+
+  // Baris TO PERHARI (jika ada)
+  if(hasTP){
+    const trT=document.createElement('tr');
+    _rtd(trT,'TO PERHARI','rl-ket');
+    filled.forEach(p=>_rtd(trT,data[p].tp!==null?fmtK(data[p].tp):'0','rv-tp'));
+    _rtd(trT,fmtK(totT),'rv-tot');
+    tbody.appendChild(trT);
+  }
+
+  table.appendChild(tbody);
+
+  // Bind tombol copy
+  document.getElementById('recapCopySheet').onclick=()=>copyRecapSheet(data,filled,hasTP,totM,totW,totT);
+  // Copy hanya nominalnya saja (tanpa header, tanpa nomor urut)
+  document.getElementById('recapCopyModal').onclick=()=>copyNominal(data,filled,'modal');
+  document.getElementById('recapCopyWB').onclick=()=>copyNominal(data,filled,'wb');
+  const tpBtn=document.getElementById('recapCopyTP');
+  if(hasTP){ tpBtn.style.display=''; tpBtn.onclick=()=>copyNominal(data,filled,'tp'); }
+  else tpBtn.style.display='none';
+}
+function _th(tr,text,cls){
+  const th=document.createElement('th');th.className=cls;th.textContent=text;tr.appendChild(th);
+}
+function _rtd(tr,text,cls){
+  const td=document.createElement('td');td.className=cls;td.textContent=text;tr.appendChild(td);
+}
+
+// Copy hanya nominalnya saja — tab-separated, tanpa label, tanpa nomor urut
+function copyNominal(data,filled,field){
+  const vals=filled.map(p=>{
+    const v=data[p][field];
+    if(v===null) return '0';
+    return field==='wb'?fmtKS(v):fmtK(v);
+  });
+  const labels={'modal':'MODAL','wb':'WIN/BOK','tp':'TO PERHARI'};
+  doCopy(vals.join('\t'),`NOMINAL ${labels[field]} (${filled.length} PASARAN) DI-COPY!`);
+}
+
+// Copy full recap horizontal ke sheet
+function copyRecapSheet(data,filled,hasTP,totM,totW,totT){
+  const header='KETERANGAN\t'+filled.map(p=>p).join('\t')+'\tTOTAL\n';
+  const rowM='MODAL\t'+filled.map(p=>fmtK(data[p].modal)).join('\t')+'\t'+fmtK(totM)+'\n';
+  const rowW='WIN/BOK\t'+filled.map(p=>data[p].wb!==null?fmtKS(data[p].wb):'0').join('\t')+'\t'+fmtKS(totW)+'\n';
+  let text=header+rowM+rowW;
+  if(hasTP){
+    const rowT='TO PERHARI\t'+filled.map(p=>data[p].tp!==null?fmtK(data[p].tp):'0').join('\t')+'\t'+fmtK(totT)+'\n';
+    text+=rowT;
+  }
+  doCopy(text,'REKAPAN HORIZONTAL SIAP DI-PASTE KE SHEET!');
+}
+
+// Copy main table semua pasaran
+function copyAll(){
+  if(!gData){setS('⚠ Proses data dulu!');return;}
+  let text='PASARAN\tMODAL\tWIN/BOK\tTO PERHARI\n';
+  let totM=0,totW=0,totT=0;
+  PASARAN.forEach(p=>{
+    const d=gData[p],has=d.modal!==null;
+    text+=`${p}\t${has?fmtK(d.modal):'0'}\t${has&&d.wb!==null?fmtKS(d.wb):'0'}\t${has&&d.tp!==null?fmtK(d.tp):'0'}\n`;
+    totM+=d.modal||0;totW+=d.wb||0;totT+=d.tp||0;
+  });
+  text+=`TOTAL\t${fmtK(totM)}\t${fmtKS(totW)}\t${fmtK(totT)}\n`;
+  doCopy(text,'SEMUA DATA SIAP DI-PASTE KE SHEET!');
+}
+
+// ── COPY UTILITY ─────────────────────────────────────────────────────────────
+function doCopy(text,msg='COPIED!'){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{showToast(msg);setS('✓ '+msg);}).catch(()=>fallback(text,msg));
+  } else fallback(text,msg);
+}
+function fallback(text,msg){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{ if(document.execCommand('copy')){showToast(msg);setS('✓ '+msg);}else setS('⚠ Gagal — coba Ctrl+C'); }
+  catch(e){setS('⚠ Error: '+e.message);}
+  document.body.removeChild(ta);
+}
+
+// ── MAIN ACTIONS ──────────────────────────────────────────────────────────────
+function processData(){
+  const raw=document.getElementById('rawInput').value.trim();
+  if(!raw){setS('⚠ Belum ada data!');return;}
+  gData=parseInput(raw);
+  const filled=PASARAN.filter(p=>gData[p].modal!==null).length;
+  renderMain(gData);renderRecap(gData);
+  if(filled===0) setS('⚠ Tidak ada pasaran terdeteksi — cek nama pasaran harus sesuai daftar.');
+  else setS(`✓ ${filled} pasaran berhasil diproses dari ${PASARAN.length} total.`);
+}
+function clearAll(){
+  gData=null;
+  document.getElementById('rawInput').value='';
+  document.getElementById('mainBody').innerHTML='<tr><td colspan="6"><div class="empty"><div class="ico">🎯</div><div>PASTE DATA DAN KLIK PROSES</div></div></td></tr>';
+  document.getElementById('recapWrap').style.display='none';
+  document.getElementById('sbar').style.display='none';
+  setS('— Siap menerima data —');
+}
+function setS(m){document.getElementById('statusBar').textContent=m;}
+function showToast(m){
+  const t=document.getElementById('toast');t.textContent='✓ '+m;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2500);
+}
+document.getElementById('rawInput').addEventListener('paste',()=>setTimeout(processData,120));
+</script>
+</body>
+</html>
